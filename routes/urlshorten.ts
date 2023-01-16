@@ -3,9 +3,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import express from "express";
 import jwt from "jsonwebtoken";
-import moment from "moment-timezone";
 
-const time = moment().tz("Europe/Stockholm").format("hh:mm").toLocaleString();
 const router = express.Router();
 
 router.post("/", async (req: Request, res: Response) => {
@@ -24,10 +22,10 @@ router.post("/", async (req: Request, res: Response) => {
         "There is already same url in Database try again with different url",
     });
 
-  const salt = await bcrypt.genSalt(10);
+  const salt = await bcrypt.genSalt(12);
   const shortenId = await bcrypt
     .hash(originalUrl, salt)
-    .then((hash: string) => hash.substring(0, 8));
+    .then((hash: string) => hash.substring(0, 12));
 
   if (!expair) {
     const data = new UrlDB({
@@ -48,7 +46,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     await data.save();
   }
-  res.status(201).send({ shortenUrl: `http://127.0.0.1:5173/${shortenId}` });
+  res.status(201).send({ shortenUrl: `${process.env.APP_URL}${shortenId}` });
 });
 
 router.get("/", async (req, res) => {
@@ -65,16 +63,37 @@ router.get("/:shortenId", async (req: Request, res: Response) => {
   if (!urlData.expair) {
     return res.send(urlData.originalUrl);
   }
+
   try {
     //@ts-ignore
-    const decoded = jwt.verify(urlData.token, "jsonwebtoken");
+    const decoded = jwt.verify(urlData.token, process.env.JWT_TOKEN);
     if (decoded.shortenId && decoded.shortenId !== urlData.shortenId) {
       return res.status(401).send({ error: "Invalid shorten id" });
     }
   } catch (error) {
+    return res.status(401).send({ error: "The url is invalid." });
+  }
+
+  if (urlData.expair === "0") {
     return res.status(401).send({ error: "The url is not valid." });
   }
   return res.send(urlData.originalUrl);
+});
+
+router.patch("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const expairTime = req.body.expair;
+    await UrlDB.findByIdAndUpdate(
+      id,
+      {
+        expair: expairTime,
+      },
+      { new: true }
+    );
+    if (!id) return res.status(400).send({ error: "URL not found" });
+    res.send({ expairTime });
+  } catch (error) {}
 });
 
 router.delete("/:id", async (req, res) => {
@@ -85,9 +104,10 @@ router.delete("/:id", async (req, res) => {
   res.send("Removed Successfuly.");
 });
 
-const ExpairToken = (payload: Iurl, expair: number) => {
-  return jwt.sign(payload, "jsonwebtoken", {
-    expiresIn: expair,
+const ExpairToken = (payload: Iurl, expair: string) => {
+  const expairNumber = parseInt(expair);
+  return jwt.sign(payload, `${process.env.JWT_TOKEN}`, {
+    expiresIn: expairNumber,
   });
 };
 
