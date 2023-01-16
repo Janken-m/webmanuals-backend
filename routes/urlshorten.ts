@@ -30,17 +30,13 @@ router.post("/", async (req: Request, res: Response) => {
       "X-Api-Key": ` ${process.env.WORD_NAME}`,
     },
   };
-  try {
-    await axios(config)
-      .then(function (response) {
-        shortenId = response.data.word;
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-  } catch (error) {
-    console.log(error);
-  }
+  await axios(config)
+    .then(function (response) {
+      shortenId = response.data.word;
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
 
   if (!expair) {
     const data = new UrlDB({
