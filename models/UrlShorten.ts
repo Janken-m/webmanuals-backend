@@ -33,7 +33,8 @@ export function validateUrl(url: string) {
   const Schema = Joi.object({
     originalUrl: Joi.string()
       .uri({ allowQuerySquareBrackets: true })
-      .label("URL must start with http or https")
+      .label("URL")
+      .message("must start with http or https")
       .required(),
     expair: Joi.string().allow("").label("expair"),
   });
