@@ -30,7 +30,7 @@ router.post("/", async (req: Request, res: Response) => {
       "X-Api-Key": ` ${process.env.WORD_NAME}`,
     },
   };
-  await axios(config)
+  axios(config)
     .then(function (response) {
       shortenId = response.data.word;
     })
