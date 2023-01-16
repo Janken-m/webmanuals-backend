@@ -42,6 +42,7 @@ router.post("/", async (req: Request, res: Response) => {
     const data = new UrlDB({
       shortenId,
       originalUrl,
+      expair,
       token,
     });
 
@@ -57,30 +58,22 @@ router.get("/", async (req, res) => {
 
 router.get("/:shortenId", async (req: Request, res: Response) => {
   const shortenId = req.params.shortenId;
-
   const urlData = await UrlDB.findOne({ shortenId });
-  if (urlData) {
-    console.log(moment(urlData.createdAt).format("mm:ss").toLocaleString());
-    const hours = new Date().getHours();
-    const minutes = new Date().getMinutes();
-    const secounds = new Date().getSeconds();
-    console.log(hours, minutes, secounds.toLocaleString());
-  }
   if (!urlData) {
     return res.status(404).send({ error: "URL not found" });
   }
-  if (urlData.createdAt && urlData.createdAt < new Date().toLocaleString()) {
-    return res.status(410).send({ error: "URL has expired" });
+  if (!urlData.expair) {
+    return res.send(urlData.originalUrl);
   }
-  // try {
-  //   //@ts-ignore
-  //   const decoded = jwt.verify(urlData.token, "jsonwebtoken");
-  //   if (decoded.shortenId && decoded.shortenId !== urlData.shortenId) {
-  //     return res.status(401).send({ error: "Invalid shorten id" });
-  //   }
-  // } catch (error) {
-  //   return res.status(401).send({ error: "The url is not valid." });
-  // }
+  try {
+    //@ts-ignore
+    const decoded = jwt.verify(urlData.token, "jsonwebtoken");
+    if (decoded.shortenId && decoded.shortenId !== urlData.shortenId) {
+      return res.status(401).send({ error: "Invalid shorten id" });
+    }
+  } catch (error) {
+    return res.status(401).send({ error: "The url is not valid." });
+  }
   return res.send(urlData.originalUrl);
 });
 
@@ -92,9 +85,9 @@ router.delete("/:id", async (req, res) => {
   res.send("Removed Successfuly.");
 });
 
-const ExpairToken = (payload: Iurl, time: number) => {
+const ExpairToken = (payload: Iurl, expair: number) => {
   return jwt.sign(payload, "jsonwebtoken", {
-    expiresIn: time,
+    expiresIn: expair,
   });
 };
 
