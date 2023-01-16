@@ -1,8 +1,8 @@
 import { Iurl, UrlDB, validateUrl } from "../models/UrlShorten";
 import { Request, Response } from "express";
-import bcrypt from "bcrypt";
 import express from "express";
 import jwt from "jsonwebtoken";
+import axios from "axios";
 
 const router = express.Router();
 
@@ -18,14 +18,25 @@ router.post("/", async (req: Request, res: Response) => {
   const ExsitingUrl = await UrlDB.findOne({ originalUrl: originalUrl });
   if (ExsitingUrl)
     return res.status(400).send({
-      error:
-        "There is already same url in Database try again with different url",
+      error: `You have already shortened this URL.`,
     });
 
-  const salt = await bcrypt.genSalt(12);
-  const shortenId = await bcrypt
-    .hash(originalUrl, salt)
-    .then((hash: string) => hash.substring(0, 12));
+  let shortenId;
+
+  const config = {
+    method: "GET",
+    url: "https://api.api-ninjas.com/v1/randomword",
+    headers: {
+      "X-Api-Key": ` ${process.env.WORD_NAME}`,
+    },
+  };
+  await axios(config)
+    .then(function (response) {
+      shortenId = response.data.word;
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
 
   if (!expair) {
     const data = new UrlDB({
