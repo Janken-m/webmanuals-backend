@@ -17,7 +17,7 @@ router.post("/", async (req: Request, res: Response) => {
   const ExsitingUrl = await UrlDB.findOne({ originalUrl: originalUrl });
   if (ExsitingUrl)
     return res.status(400).send({
-      error: `You have already shortened this URL.`,
+      error: `You have already shortened this URL ${ExsitingUrl.shortenId}`,
     });
 
   const shortenId = randomstring.generate({
