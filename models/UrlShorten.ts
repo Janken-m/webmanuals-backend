@@ -1,5 +1,4 @@
-import { Schema, Model } from "mongoose";
-import mongoose from "mongoose";
+import mongoose, { Schema, Model } from "mongoose";
 import Joi from "joi";
 
 export interface Iurl {
@@ -13,16 +12,11 @@ const UrlSchema: Schema<Iurl> = new mongoose.Schema(
   {
     originalUrl: {
       type: String,
+      required: true,
     },
-    shortenId: {
-      type: String,
-    },
-    expair: {
-      type: String,
-    },
-    token: {
-      type: String,
-    },
+    shortenId: String,
+    expair: String,
+    token: String,
   },
   { timestamps: true }
 );

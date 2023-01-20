@@ -16,9 +16,7 @@ app.use(error);
 
 mongoose
   .set("strictQuery", false)
-  .connect(
-    `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASSWORD}@webmanuals.vvarc03.mongodb.net/?retryWrites=true&w=majority`
-  )
+  .connect(`mongodb://localhost:27017/webmanuals`)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.log("Could not connect to MongoDB", err));
 

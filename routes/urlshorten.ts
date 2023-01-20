@@ -1,8 +1,7 @@
 import { Iurl, UrlDB, validateUrl } from "../models/UrlShorten";
-import { Request, Response } from "express";
-import express from "express";
+import express, { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import axios from "axios";
+import randomstring from "randomstring";
 
 const router = express.Router();
 
@@ -21,22 +20,10 @@ router.post("/", async (req: Request, res: Response) => {
       error: `You have already shortened this URL.`,
     });
 
-  let shortenId;
-
-  const config = {
-    method: "GET",
-    url: "https://api.api-ninjas.com/v1/randomword",
-    headers: {
-      "X-Api-Key": ` ${process.env.WORD_NAME}`,
-    },
-  };
-  await axios(config)
-    .then(function (response) {
-      shortenId = response.data.word;
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
+  const shortenId = randomstring.generate({
+    length: 6,
+    charset: "alphabetic",
+  });
 
   if (!expair) {
     const data = new UrlDB({
@@ -57,7 +44,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     await data.save();
   }
-  res.status(201).send({ shortenUrl: `${process.env.APP_URL}${shortenId}` });
+  res.status(201).send({ shortenUrl: `${process.env.API_URL}${shortenId}` });
 });
 
 router.get("/", async (req, res) => {
